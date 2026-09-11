@@ -318,7 +318,8 @@ footer{margin-top:22px;font-size:13px;color:var(--muted);text-align:center;line-
   <p class="sub" id="fname"></p>
   <p class="note" id="sendmsg">Ниже те же ответы текстом — можно скопировать и отправить сообщением.</p>
   <textarea id="dump" readonly></textarea>
-  <button class="btn ghost" id="copy" style="width:100%;max-width:none;margin-top:10px">Скопировать текст</button>
+  <button class="btn" id="savefile" style="width:100%;max-width:none;margin-top:10px">Сохранить файл себе</button>
+  <button class="btn ghost" id="copy" style="width:100%;max-width:none;margin-top:8px">Скопировать текст</button>
   <button class="btn" id="share2" style="width:100%;max-width:none;margin-top:10px" hidden>Отправить файлом</button>
   <div class="hint"><b>Совсем ничего не вышло?</b><br>Сделайте скриншот этого экрана и отправьте картинкой — так тоже подойдёт.</div>
 </div>
@@ -490,7 +491,7 @@ footer{margin-top:22px;font-size:13px;color:var(--muted);text-align:center;line-
 
   function clean(s){return (s||"").replace(/[\/\\:*?"<>|]/g,"").replace(/\s+/g," ").trim();}
   function filename(){
-    var n=[clean($("code").value),clean($("fio").value)].filter(Boolean).join(" - ");
+    var n=[clean($("fio").value),clean($("code").value)].filter(Boolean).join(" - ");
     return (n||("Осмотр "+($("date").value||"без даты")))+".json";
   }
   function plain(d,s){
@@ -503,10 +504,10 @@ footer{margin-top:22px;font-size:13px;color:var(--muted);text-align:center;line-
   /* ---------- отправка ---------- */
   var lastPack=null;
   function pack(){
-    var d=collect(),s=score();
+    var d=collect(),s=score(),txt=plain(d,s);
     return {fn:filename(),
-      payload:{f:"osmotr-lodyzhki",v:6,t:new Date().toISOString(),n:filename(),d:compact(d),a:s},
-      text:plain(d,s)};
+      payload:{f:"osmotr-lodyzhki",v:7,t:new Date().toISOString(),n:filename(),d:compact(d),a:s,txt:txt},
+      text:txt};
   }
   function finish(){
     var p=pack();lastPack=p;
@@ -518,6 +519,7 @@ footer{margin-top:22px;font-size:13px;color:var(--muted);text-align:center;line-
     if(inTG&&TG.sendData){
       var s=JSON.stringify(p.payload);
       if(s.length<=4000){
+        $("sendmsg").textContent="Отправлено врачу. Файл придёт в чат отдельным сообщением.";
         try{TG.sendData(s);return;}catch(e){}
       }else{
         $("sendmsg").textContent="Осмотр слишком большой для отправки одним сообщением — сохраните файлом.";
@@ -543,6 +545,7 @@ footer{margin-top:22px;font-size:13px;color:var(--muted);text-align:center;line-
 
   $("save").addEventListener("click",finish);
   $("share2").addEventListener("click",function(){if(lastPack)offerFile(lastPack);});
+  $("savefile").addEventListener("click",function(){offerFile(lastPack||pack());});
 
   $("copy").addEventListener("click",function(){
     var ta=$("dump"),b=this,ok=false;
