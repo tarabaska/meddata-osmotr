@@ -324,6 +324,9 @@ footer{margin-top:22px;font-size:13px;color:var(--muted);text-align:center;line-
   <div class="hint"><b>Совсем ничего не вышло?</b><br>Сделайте скриншот этого экрана и отправьте картинкой — так тоже подойдёт.</div>
 </div>
 
+<div style="display:flex;justify-content:center;margin-top:4px">
+  <button type="button" id="fresh2" class="mini" style="min-height:44px">Начать заново</button>
+</div>
 <footer>Тестовая версия. Данные никуда не отправляются сами.</footer>
 </div>
 
@@ -575,10 +578,37 @@ footer{margin-top:22px;font-size:13px;color:var(--muted);text-align:center;line-
     fr.readAsText(f);
   });
 
-  $("fresh").addEventListener("click",function(){
-    if(!confirm("Стереть заполненное и начать новый осмотр?"))return;
-    clearDraft();location.reload();
-  });
+  function resetForm(){
+    ID.forEach(function(k){$(k).value="";});
+    RAD.forEach(function(k){
+      var e=document.querySelector('input[name="'+k+'"]:checked');
+      if(e)e.checked=false;
+    });
+    CALC.forEach(function(id){
+      var el=$(id);el.removeAttribute("data-touched");el.classList.remove("edited");
+    });
+    lastPack=null;
+    $("restored").hidden=true;
+    $("after").hidden=true;
+    $("loadmsg").textContent="";
+    $("sendmsg").textContent="Ниже те же ответы текстом — можно скопировать и отправить сообщением.";
+    try{$("loadfile").value="";}catch(e){}
+    var n=new Date(),p=function(x){return(x<10?"0":"")+x;};
+    $("date").value=n.getFullYear()+"-"+p(n.getMonth()+1)+"-"+p(n.getDate());
+    clearDraft();
+    recalc();score();
+    draft();
+    window.scrollTo(0,0);
+  }
+  function askFresh(){
+    var q="Стереть заполненное и начать новый осмотр?";
+    if(inTG&&TG.showConfirm){
+      try{TG.showConfirm(q,function(ok){if(ok)resetForm();});return;}catch(e){}
+    }
+    if(confirm(q))resetForm();
+  }
+  $("fresh").addEventListener("click",askFresh);
+  $("fresh2").addEventListener("click",askFresh);
 
   /* ---------- события ---------- */
   document.addEventListener("input",function(){recalc();draft();});
