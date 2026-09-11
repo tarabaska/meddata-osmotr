@@ -17,11 +17,15 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 FORM_URL="${OSMOTR_URL:-https://tarabaska.github.io/meddata-osmotr/}"
-TOKEN_FILE="$HOME/.burtsev-tg-token"
+TOKEN_FILE="${OSMOTR_TOKEN_FILE:-$HOME/.osmotr-tg-token}"
 OFFSET_FILE="$HOME/.osmotr-tg-offset"
 OUT_DIR="${OSMOTR_DIR:-$HOME/MedData/osmotry}"
 
-[ -s "$TOKEN_FILE" ] || { echo "Нет токена бота в $TOKEN_FILE" >&2; exit 1; }
+if [ ! -s "$TOKEN_FILE" ]; then
+  echo "Бот для формы осмотра ещё не подключён." >&2
+  echo "Запустите: $SCRIPT_DIR/tg-osmotr-token.sh" >&2
+  exit 1
+fi
 TOKEN=$(tr -d '[:space:]' < "$TOKEN_FILE")
 API="https://api.telegram.org/bot${TOKEN}"
 mkdir -p "$OUT_DIR"
