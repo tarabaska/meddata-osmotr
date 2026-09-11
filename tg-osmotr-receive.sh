@@ -3,8 +3,8 @@
 #
 # Мини-приложение возвращает осмотр боту служебным сообщением, которого
 # в чате не видно. Этот скрипт его забирает, кладёт файл «Фамилия - Код.json»
-# на диск и присылает тот же файл обратно в чат — чтобы осмотр было видно
-# и можно было переслать куда угодно.
+# на диск, собирает из него PDF на один лист и присылает в чат оба:
+# PDF — читать и подшивать, JSON — для программы.
 #
 # Использование:
 #   ./tg-osmotr-receive.sh              — забрать всё новое
@@ -15,6 +15,7 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 TOKEN_FILE="$HOME/.burtsev-tg-token"
 OFFSET_FILE="$HOME/.osmotr-tg-offset"
 OUT_DIR="${OSMOTR_DIR:-$HOME/MedData/osmotry}"
@@ -28,7 +29,8 @@ pull() {
   local offset resp
   offset=$(cat "$OFFSET_FILE" 2>/dev/null || echo 0)
   resp=$(curl -sS --max-time 40 "${API}/getUpdates?offset=${offset}&timeout=0&allowed_updates=%5B%22message%22%5D") || return 0
-  OUT_DIR="$OUT_DIR" OFFSET_FILE="$OFFSET_FILE" API="$API" python3 - "$resp" <<'PYEOF'
+  OUT_DIR="$OUT_DIR" OFFSET_FILE="$OFFSET_FILE" API="$API" HERE="$SCRIPT_DIR" \
+    python3 - "$resp" <<'PYEOF'
 import json, os, re, sys, datetime, subprocess
 
 resp = json.loads(sys.argv[1])
@@ -76,22 +78,35 @@ for upd in resp.get("result", []):
     a = payload.get("a") or {}
     print("сохранён:", os.path.basename(path), "| AOFAS", a.get("total", "—"))
 
+    pdf_path = None
+    try:
+        sys.path.insert(0, os.environ.get("HERE", "."))
+        import osmotr_pdf
+        pdf_path = osmotr_pdf.build(path)
+        print("   PDF собран:", os.path.basename(pdf_path))
+    except Exception as exc:
+        print("   PDF собрать не удалось:", exc)
+
     chat = (msg.get("chat") or {}).get("id")
     if chat:
-        caption = (payload.get("txt") or "Осмотр после перелома лодыжек")[:1000]
-        r = subprocess.run([
-            "curl", "-sS", "--max-time", "60", "-X", "POST",
-            api + "/sendDocument",
-            "-F", "chat_id=" + str(chat),
-            "-F", "document=@" + path,
-            "-F", "caption=" + caption,
-        ], capture_output=True, text=True)
-        ok = False
-        try:
-            ok = json.loads(r.stdout).get("ok", False)
-        except Exception:
-            pass
-        print("   файл отправлен в чат" if ok else "   файл в чат отправить не удалось")
+        def send(fpath, cap):
+            r = subprocess.run([
+                "curl", "-sS", "--max-time", "90", "-X", "POST",
+                api + "/sendDocument",
+                "-F", "chat_id=" + str(chat),
+                "-F", "document=@" + fpath,
+                "-F", "caption=" + cap[:1000],
+            ], capture_output=True, text=True)
+            try:
+                return json.loads(r.stdout).get("ok", False)
+            except Exception:
+                return False
+
+        if pdf_path:
+            ok = send(pdf_path, payload.get("txt") or "Осмотр после перелома лодыжек")
+            print("   PDF отправлен в чат" if ok else "   PDF в чат отправить не удалось")
+        ok = send(path, "Тот же осмотр для программы")
+        print("   JSON отправлен в чат" if ok else "   JSON в чат отправить не удалось")
 
 if last is not None:
     with open(offset_file, "w") as fh:
