@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>Осмотр после перелома лодыжек</title>
+<style>
+:root{
+  --bg:#F2F5F4; --card:#FFFFFF; --soft:#EDF2F0;
+  --ink:#14201E; --ink2:#3F4E4B; --muted:#697874;
+  --line:#DBE3E0; --line2:#B5C3BF;
+  --accent:#136B5E; --accent-soft:#E2EFEC; --on-accent:#FFFFFF;
+  --warn:#8F5A08; --warn-soft:#FAF0DD;
+  color-scheme:light;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--ink);
+  font:400 16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  -webkit-text-size-adjust:100%;padding-bottom:96px;
+}
+.wrap{max-width:840px;margin:0 auto;padding:18px 14px 30px}
+h1{font-size:22px;font-weight:700;margin:6px 0 4px;letter-spacing:-.01em}
+.lede{margin:0 0 18px;color:var(--ink2);font-size:15px}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 15px;margin-bottom:14px}
+.card>h2{font-size:17px;font-weight:600;margin:0 0 3px}
+.card>.sub{font-size:14px;color:var(--muted);margin:0 0 15px}
+
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.row.one{grid-template-columns:1fr}
+@media(max-width:620px){.row{grid-template-columns:1fr}}
+.f{display:flex;flex-direction:column;gap:6px;min-width:0}
+.f>label{font-size:14px;color:var(--muted);line-height:1.35}
+
+input[type=text],input[type=number],input[type=date],textarea{
+  width:100%;min-height:46px;padding:9px 11px;font:inherit;font-size:16px;
+  border:1.5px solid var(--line2);border-radius:10px;background:var(--card);color:var(--ink);
+}
+textarea{min-height:70px;resize:vertical;line-height:1.45}
+input:focus,textarea:focus{outline:none;border-color:var(--accent)}
+input[readonly]{background:var(--soft);color:var(--ink2)}
+
+.side{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.side b{font-weight:600;width:16px;color:var(--muted);font-size:14px}
+.side input{width:64px;min-height:44px;text-align:center;padding:8px 4px}
+.side input.calcin{background:var(--accent-soft);border-color:var(--accent)}
+.side input.calcin.edited{background:var(--card);border-color:var(--line2)}
+.side .eq{color:var(--muted);font-size:13px}
+
+.seg{display:inline-flex;border:1.5px solid var(--line2);border-radius:10px;overflow:hidden;background:var(--card)}
+.seg label{padding:11px 14px;font-size:15px;cursor:pointer;border-right:1.5px solid var(--line2);min-height:44px;display:flex;align-items:center}
+.seg label:last-child{border-right:0}
+.seg input{position:absolute;opacity:0;width:0;height:0}
+.seg label:has(input:checked){background:var(--accent);color:var(--on-accent)}
+.seg.sm label{padding:10px 13px;min-width:44px;justify-content:center}
+
+.opt{display:flex;align-items:flex-start;gap:11px;padding:11px 11px;border-radius:10px;cursor:pointer;border:1.5px solid transparent}
+.opt:active{background:var(--soft)}
+.opt input{position:absolute;opacity:0;width:0;height:0}
+.bx{flex:0 0 auto;width:22px;height:22px;margin-top:1px;border:1.5px solid var(--line2);border-radius:5px;
+  background:var(--card);display:grid;place-items:center;font-size:14px;color:transparent;line-height:1}
+.opt:has(input:checked){background:var(--accent-soft);border-color:var(--accent)}
+.opt:has(input:checked) .bx{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.opt .tx{flex:1;font-size:15px;line-height:1.4}
+.opt .pts{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:2px}
+
+.blk{margin-bottom:16px}
+.blk>p{font-size:14px;font-weight:600;margin:0 0 5px;color:var(--ink2)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+@media(max-width:700px){.cols{grid-template-columns:1fr;gap:0}}
+
+.tot{background:var(--soft);border-radius:10px;padding:11px 13px;display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+.tot span{font-size:14px;color:var(--ink2)}
+.tot b{font-size:21px;font-weight:700;font-variant-numeric:tabular-nums}
+.tot.main{background:var(--accent);color:var(--on-accent)}
+.tot.main span,.tot.main b{color:var(--on-accent)}
+
+.savebar{
+  position:fixed;left:0;right:0;bottom:0;background:var(--card);
+  border-top:1px solid var(--line);padding:11px 14px calc(11px + env(safe-area-inset-bottom));
+  display:flex;align-items:center;gap:12px;justify-content:center;
+}
+.savebar .live{font-size:14px;color:var(--muted);white-space:nowrap}
+.savebar .live b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums;font-size:17px}
+button{font:inherit;cursor:pointer}
+.btn{flex:1;max-width:340px;min-height:52px;background:var(--accent);color:var(--on-accent);
+  border:0;border-radius:12px;font-size:17px;font-weight:600}
+.btn.ghost{background:var(--card);color:var(--accent);border:1.5px solid var(--accent)}
+
+.after{margin-top:14px}
+#dump{width:100%;min-height:120px;font:400 13px/1.5 ui-monospace,Menlo,Consolas,monospace;
+  border:1.5px solid var(--line2);border-radius:10px;padding:11px;background:var(--card);color:var(--ink)}
+.hint{background:var(--warn-soft);border-left:4px solid var(--warn);border-radius:0 10px 10px 0;
+  padding:12px 14px;margin-top:12px;font-size:15px;line-height:1.45}
+.hint b{color:var(--warn)}
+.note{font-size:13px;color:var(--muted);margin:8px 0 0;line-height:1.45}
+.auto{font-size:12px;color:var(--accent);margin:0;line-height:1.3}
+.f.calc input{background:var(--accent-soft);border-color:var(--accent)}
+.f.calc input.edited{background:var(--card);border-color:var(--line2)}
+.codewrap{display:flex;gap:7px}
+.codewrap input{flex:1;min-width:0}
+.mini{min-height:46px;padding:0 13px;white-space:nowrap;background:var(--card);color:var(--accent);
+  border:1.5px solid var(--accent);border-radius:10px;font-size:14px;font-weight:600}
+.banner{background:var(--accent-soft);border:1px solid var(--accent);border-radius:12px;
+  padding:12px 14px;margin-bottom:14px;font-size:15px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.banner span{flex:1;min-width:180px}
+.banner button{background:transparent;border:1.5px solid var(--accent);color:var(--accent);
+  border-radius:9px;padding:9px 13px;font-size:14px;font-weight:600;min-height:42px}
+.banner.warn{background:var(--warn-soft);border-color:var(--warn);color:var(--ink)}
+.banner.stop{background:#FCEEEC;border:2px solid #A33A28;color:var(--ink);display:block}
+.banner.stop b{color:#A33A28;display:block;margin-bottom:4px;font-size:16px}
+.banner.stop em{font-style:normal;font-weight:600}
+.savebar .live{display:flex;flex-direction:column;gap:1px;line-height:1.25;white-space:nowrap}
+.savebar .live .sc{font-size:14px;color:var(--muted)}
+.savebar .live i{font-style:normal;font-size:11px;color:var(--muted)}
+@media(max-width:380px){.savebar{gap:9px;padding-left:10px;padding-right:10px}.savebar .live i{font-size:10px}.btn{font-size:16px}}
+footer{margin-top:22px;font-size:13px;color:var(--muted);text-align:center;line-height:1.5}
+[hidden]{display:none!important}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="banner" id="tgnote" hidden><span>Внизу экрана кнопка <b>«Отправить врачу»</b> — она вернёт заполненный осмотр в чат.</span></div>
+<div class="banner stop" id="nojs">
+  <b>Подсчёт не работает</b>
+  Страница открыта в режиме, где не выполняются скрипты. Откройте её по ссылке в браузере — тогда возраст, дни с операции, итоги амплитуды и баллы AOFAS начнут считаться сами.
+</div>
+<div class="banner" id="restored" hidden><span>Восстановлен незаконченный осмотр.</span><button type="button" id="fresh">Начать заново</button></div>
+<div class="banner warn" id="nostore" hidden><span>Браузер не даёт хранить черновик на этом устройстве. Заполненное держится в адресе страницы — не закрывайте вкладку, а для надёжности нажмите «Сохранить ответы» в середине работы.</span></div>
+<h1>Осмотр после перелома лодыжек</h1>
+<p class="lede">Заполняется на приёме: пациент отвечает о себе, врач вносит измерения. Данные остаются на устройстве.</p>
+
+<div class="card">
+  <h2>Пациент и визит</h2>
+  <p class="sub">Фамилия и дата рождения остаются на этом устройстве.</p>
+  <div class="row one"><div class="f"><label>Продолжить ранее сохранённый осмотр</label>
+    <input type="file" id="loadfile" accept=".json,application/json" style="padding:10px 11px">
+    <p class="auto" id="loadmsg"></p></div></div>
+  <div class="row">
+    <div class="f"><label>Дата осмотра</label><input type="date" id="date"></div>
+    <div class="f"><label>Сторона</label>
+      <div class="seg"><label><input type="radio" name="side" value="левая">левая</label><label><input type="radio" name="side" value="правая">правая</label></div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="f"><label>Дата операции</label><input type="date" id="opdate"></div>
+    <div class="f calc"><label>Дней с операции</label><input type="number" id="days" placeholder="—"><p class="auto" id="days_hint"></p></div>
+  </div>
+  <div class="row">
+    <div class="f"><label>Фамилия, имя, отчество</label><input type="text" id="fio" placeholder="Иванов Иван Иванович"></div>
+    <div class="f"><label>Код в исследовании</label>
+      <div class="codewrap"><input type="text" id="code" list="codes" placeholder="MA-2026-001"><button type="button" class="mini" id="newcode">новый</button></div>
+      <datalist id="codes"></datalist>
+    </div>
+  </div>
+  <div class="row">
+    <div class="f"><label>Дата рождения</label><input type="date" id="dob"></div>
+    <div class="f calc"><label>Возраст на момент операции</label><input type="number" id="age" placeholder="—"></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Измерения</h2>
+  <p class="sub">Вносит врач.</p>
+
+  <div class="row">
+    <div class="f"><label>Амплитуда движений: сгибание — ноль — разгибание</label>
+      <div class="side"><b>П</b><input type="text" id="rom_r1" placeholder="50"><input type="text" id="rom_r2" placeholder="0"><input type="text" id="rom_r3" placeholder="5"><span class="eq">итого</span><input type="text" id="rom_rt" class="calcin" placeholder="—"></div>
+      <div class="side"><b>Л</b><input type="text" id="rom_l1" placeholder="60"><input type="text" id="rom_l2" placeholder="0"><input type="text" id="rom_l3" placeholder="15"><span class="eq">итого</span><input type="text" id="rom_lt" class="calcin" placeholder="—"></div>
+    </div>
+    <div class="f"><label>Окружность на уровне медиальной лодыжки, см</label>
+      <div class="side"><b>П</b><input type="text" id="vol_r" placeholder="26"></div>
+      <div class="side"><b>Л</b><input type="text" id="vol_l" placeholder="28"><span class="eq" id="vol_d">разница —</span></div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="f"><label>Тыльное сгибание с сопротивлением: сила 0–5, боль 0–10</label>
+      <div class="side"><b>П</b><input type="text" id="df_rp" placeholder="сила"><input type="text" id="df_rb" placeholder="боль"></div>
+      <div class="side"><b>Л</b><input type="text" id="df_lp" placeholder="сила"><input type="text" id="df_lb" placeholder="боль"></div>
+    </div>
+    <div class="f"><label>Разгибание с сопротивлением: сила 0–5, боль 0–10</label>
+      <div class="side"><b>П</b><input type="text" id="ex_rp" placeholder="сила"><input type="text" id="ex_rb" placeholder="боль"></div>
+      <div class="side"><b>Л</b><input type="text" id="ex_lp" placeholder="сила"><input type="text" id="ex_lb" placeholder="боль"></div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="f"><label>Боль при ходьбе, 0–10</label><input type="number" id="painwalk" min="0" max="10" placeholder="4"></div>
+    <div class="f"><label>Хромота</label>
+      <div class="seg"><label><input type="radio" name="limp" value="есть">есть</label><label><input type="radio" name="limp" value="нет">нет</label></div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="f"><label>Максимальная дистанция ходьбы, км</label><input type="number" id="maxkm" step="0.5" placeholder="6"></div>
+    <div class="f"><label>Ходьба с костылями, недель</label><input type="number" id="crutchw" placeholder="3"></div>
+  </div>
+
+  <div class="row">
+    <div class="f"><label>Передний выдвижной ящик</label>
+      <div class="side"><b>П</b><div class="seg sm"><label><input type="radio" name="ad_r" value="+">+</label><label><input type="radio" name="ad_r" value="−">−</label></div>
+      <b>Л</b><div class="seg sm"><label><input type="radio" name="ad_l" value="+">+</label><label><input type="radio" name="ad_l" value="−">−</label></div></div>
+    </div>
+    <div class="f"><label>Наклон таранной кости</label>
+      <div class="side"><b>П</b><div class="seg sm"><label><input type="radio" name="tt_r" value="+">+</label><label><input type="radio" name="tt_r" value="−">−</label></div>
+      <b>Л</b><div class="seg sm"><label><input type="radio" name="tt_l" value="+">+</label><label><input type="radio" name="tt_l" value="−">−</label></div></div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="f"><label>Тыльное сгибание с наружной ротацией</label>
+      <div class="side"><b>П</b><div class="seg sm"><label><input type="radio" name="dfer_r" value="+">+</label><label><input type="radio" name="dfer_r" value="−">−</label></div>
+      <b>Л</b><div class="seg sm"><label><input type="radio" name="dfer_l" value="+">+</label><label><input type="radio" name="dfer_l" value="−">−</label></div></div>
+    </div>
+    <div class="f"><label>Тест сдавления</label>
+      <div class="side"><b>П</b><div class="seg sm"><label><input type="radio" name="sq_r" value="+">+</label><label><input type="radio" name="sq_r" value="−">−</label></div>
+      <b>Л</b><div class="seg sm"><label><input type="radio" name="sq_l" value="+">+</label><label><input type="radio" name="sq_l" value="−">−</label></div></div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="f"><label>Эверсионный стресс-тест</label>
+      <div class="side"><b>П</b><div class="seg sm"><label><input type="radio" name="ev_r" value="+">+</label><label><input type="radio" name="ev_r" value="−">−</label></div>
+      <b>Л</b><div class="seg sm"><label><input type="radio" name="ev_l" value="+">+</label><label><input type="radio" name="ev_l" value="−">−</label></div></div>
+    </div>
+    <div class="f"><label>Рана</label>
+      <div class="seg"><label><input type="radio" name="wound" value="корочка">корочка</label><label><input type="radio" name="wound" value="гипертрофия">гипертрофия</label><label><input type="radio" name="wound" value="норма">норма</label></div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="f"><label>Артроз, стадия по Kellgren–Lawrence</label>
+      <div class="seg sm"><label><input type="radio" name="arth" value="0">0</label><label><input type="radio" name="arth" value="1">1</label><label><input type="radio" name="arth" value="2">2</label><label><input type="radio" name="arth" value="3">3</label><label><input type="radio" name="arth" value="4">4</label></div>
+    </div>
+    <div class="f"><label>Тендинит</label>
+      <div class="seg"><label><input type="radio" name="tend" value="есть">есть</label><label><input type="radio" name="tend" value="нет">нет</label></div>
+    </div>
+  </div>
+
+  <div class="row one">
+    <div class="f"><label>Комментарий</label><textarea id="comment" placeholder="Особенности осмотра"></textarea></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Шкала AOFAS</h2>
+  <p class="sub">Слева — вопросы к пациенту, справа — то, что оценивает врач.</p>
+
+  <div class="cols">
+    <div>
+      <div class="blk"><p>Боль — 40 баллов</p>
+        <label class="opt"><input type="radio" name="a_pain" data-g="pain" value="40"><span class="bx">✓</span><span class="tx">Нет</span><span class="pts">+40</span></label>
+        <label class="opt"><input type="radio" name="a_pain" data-g="pain" value="30"><span class="bx">✓</span><span class="tx">Слабая, время от времени</span><span class="pts">+30</span></label>
+        <label class="opt"><input type="radio" name="a_pain" data-g="pain" value="20"><span class="bx">✓</span><span class="tx">Умеренная, ежедневно</span><span class="pts">+20</span></label>
+        <label class="opt"><input type="radio" name="a_pain" data-g="pain" value="0"><span class="bx">✓</span><span class="tx">Сильная, почти постоянно</span><span class="pts">+0</span></label>
+      </div>
+      <div class="blk"><p>Функция: ограничения и опора</p>
+        <label class="opt"><input type="radio" name="a_act" data-g="fn" value="10"><span class="bx">✓</span><span class="tx">Ограничений нет, опора не нужна</span><span class="pts">+10</span></label>
+        <label class="opt"><input type="radio" name="a_act" data-g="fn" value="7"><span class="bx">✓</span><span class="tx">Повседневные дела без ограничений, досуг ограничен, опора не нужна</span><span class="pts">+7</span></label>
+        <label class="opt"><input type="radio" name="a_act" data-g="fn" value="4"><span class="bx">✓</span><span class="tx">Ограничены и дела, и досуг, трость</span><span class="pts">+4</span></label>
+        <label class="opt"><input type="radio" name="a_act" data-g="fn" value="0"><span class="bx">✓</span><span class="tx">Резкое ограничение: ходунки, костыли, коляска, ортез</span><span class="pts">+0</span></label>
+      </div>
+      <div class="blk"><p>Максимальная дистанция, кварталов</p>
+        <label class="opt"><input type="radio" name="a_dist" data-g="fn" value="5"><span class="bx">✓</span><span class="tx">Больше шести</span><span class="pts">+5</span></label>
+        <label class="opt"><input type="radio" name="a_dist" data-g="fn" value="4"><span class="bx">✓</span><span class="tx">Четыре — шесть</span><span class="pts">+4</span></label>
+        <label class="opt"><input type="radio" name="a_dist" data-g="fn" value="2"><span class="bx">✓</span><span class="tx">Один — три</span><span class="pts">+2</span></label>
+        <label class="opt"><input type="radio" name="a_dist" data-g="fn" value="0"><span class="bx">✓</span><span class="tx">Меньше одного</span><span class="pts">+0</span></label>
+      </div>
+      <div class="blk"><p>Поверхности</p>
+        <label class="opt"><input type="radio" name="a_surf" data-g="fn" value="5"><span class="bx">✓</span><span class="tx">Ходит везде без затруднений</span><span class="pts">+5</span></label>
+        <label class="opt"><input type="radio" name="a_surf" data-g="fn" value="3"><span class="bx">✓</span><span class="tx">Затруднения на неровном, лестницах, склонах</span><span class="pts">+3</span></label>
+        <label class="opt"><input type="radio" name="a_surf" data-g="fn" value="0"><span class="bx">✓</span><span class="tx">Резкие затруднения на неровном, лестницах, склонах</span><span class="pts">+0</span></label>
+      </div>
+      <div class="blk"><p>Походка</p>
+        <label class="opt"><input type="radio" name="a_gait" data-g="fn" value="8"><span class="bx">✓</span><span class="tx">Норма или лёгкое нарушение</span><span class="pts">+8</span></label>
+        <label class="opt"><input type="radio" name="a_gait" data-g="fn" value="4"><span class="bx">✓</span><span class="tx">Явное нарушение</span><span class="pts">+4</span></label>
+        <label class="opt"><input type="radio" name="a_gait" data-g="fn" value="0"><span class="bx">✓</span><span class="tx">Выраженное нарушение</span><span class="pts">+0</span></label>
+      </div>
+    </div>
+
+    <div>
+      <div class="blk"><p>Сагиттальная амплитуда: сгибание и разгибание</p>
+        <label class="opt"><input type="radio" name="a_sag" data-g="fn" value="8"><span class="bx">✓</span><span class="tx">Норма или лёгкое ограничение, 30° и более</span><span class="pts">+8</span></label>
+        <label class="opt"><input type="radio" name="a_sag" data-g="fn" value="4"><span class="bx">✓</span><span class="tx">Умеренное ограничение, 15–29°</span><span class="pts">+4</span></label>
+        <label class="opt"><input type="radio" name="a_sag" data-g="fn" value="0"><span class="bx">✓</span><span class="tx">Резкое ограничение, менее 15°</span><span class="pts">+0</span></label>
+      </div>
+      <div class="blk"><p>Движения заднего отдела: инверсия и эверсия</p>
+        <label class="opt"><input type="radio" name="a_hind" data-g="fn" value="6"><span class="bx">✓</span><span class="tx">Норма или лёгкое ограничение, 75–100%</span><span class="pts">+6</span></label>
+        <label class="opt"><input type="radio" name="a_hind" data-g="fn" value="3"><span class="bx">✓</span><span class="tx">Умеренное ограничение, 25–74%</span><span class="pts">+3</span></label>
+        <label class="opt"><input type="radio" name="a_hind" data-g="fn" value="0"><span class="bx">✓</span><span class="tx">Выраженное ограничение, менее 25%</span><span class="pts">+0</span></label>
+      </div>
+      <div class="blk"><p>Стабильность: передне-задняя, варус-вальгус</p>
+        <label class="opt"><input type="radio" name="a_stab" data-g="fn" value="8"><span class="bx">✓</span><span class="tx">Стабилен</span><span class="pts">+8</span></label>
+        <label class="opt"><input type="radio" name="a_stab" data-g="fn" value="0"><span class="bx">✓</span><span class="tx">Явно нестабилен</span><span class="pts">+0</span></label>
+      </div>
+      <div class="blk"><p>Ось — 10 баллов</p>
+        <label class="opt"><input type="radio" name="a_al" data-g="al" value="10"><span class="bx">✓</span><span class="tx">Хорошая: стопа плантиградна, ось правильная</span><span class="pts">+10</span></label>
+        <label class="opt"><input type="radio" name="a_al" data-g="al" value="5"><span class="bx">✓</span><span class="tx">Удовлетворительная: стопа плантиградна, ось нарушена, жалоб нет</span><span class="pts">+5</span></label>
+        <label class="opt"><input type="radio" name="a_al" data-g="al" value="0"><span class="bx">✓</span><span class="tx">Плохая: стопа не плантиградна, грубое нарушение оси, жалобы</span><span class="pts">+0</span></label>
+      </div>
+      <div class="tot"><span>Боль</span><b id="t_pain">0</b></div>
+      <div class="tot"><span>Функция</span><b id="t_fn">0</b></div>
+      <div class="tot"><span>Ось</span><b id="t_al">0</b></div>
+      <div class="tot main"><span>Итого AOFAS</span><b id="t_all">0</b></div>
+      <p class="note">Считается автоматически, из 100 баллов.</p>
+    </div>
+  </div>
+</div>
+
+<div class="card after" id="after" hidden>
+  <h2>Ответы готовы</h2>
+  <p class="sub" id="fname"></p>
+  <p class="note" id="sendmsg">Ниже те же ответы текстом — можно скопировать и отправить сообщением.</p>
+  <textarea id="dump" readonly></textarea>
+  <button class="btn ghost" id="copy" style="width:100%;max-width:none;margin-top:10px">Скопировать текст</button>
+  <button class="btn" id="share2" style="width:100%;max-width:none;margin-top:10px" hidden>Отправить файлом</button>
+  <div class="hint"><b>Совсем ничего не вышло?</b><br>Сделайте скриншот этого экрана и отправьте картинкой — так тоже подойдёт.</div>
+</div>
+
+<footer>Тестовая версия. Данные никуда не отправляются сами.</footer>
+</div>
+
+<div class="savebar">
+  <span class="live"><span class="sc">AOFAS <b id="live">0</b>/100</span><i id="saved">черновик не сохранён</i></span>
+  <button class="btn" id="save">Сохранить ответы</button>
+</div>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+(function(){
+  var TG=(window.Telegram&&window.Telegram.WebApp)?window.Telegram.WebApp:null;
+  var inTG=!!(TG&&TG.initData!==undefined);
+
+  var ID=["date","opdate","days","fio","code","dob","age","rom_r1","rom_r2","rom_r3","rom_rt",
+    "rom_l1","rom_l2","rom_l3","rom_lt","vol_r","vol_l","df_rp","df_rb","df_lp","df_lb",
+    "ex_rp","ex_rb","ex_lp","ex_lb","painwalk","maxkm","crutchw","comment"];
+  var RAD=["side","limp","ad_r","ad_l","tt_r","tt_l","dfer_r","dfer_l","sq_r","sq_l","ev_r","ev_l",
+    "wound","arth","tend","a_pain","a_act","a_dist","a_surf","a_gait","a_sag","a_hind","a_stab","a_al"];
+  var LBL={date:"Дата осмотра",opdate:"Дата операции",days:"Дней с операции",fio:"ФИО",code:"Код",
+    dob:"Дата рождения",age:"Возраст на момент операции",side:"Сторона",
+    painwalk:"Боль при ходьбе 0-10",limp:"Хромота",maxkm:"Макс. дистанция км",
+    crutchw:"Костыли недель",wound:"Рана",arth:"Артроз Kellgren-Lawrence",tend:"Тендинит",comment:"Комментарий"};
+  var CALC=["days","age","rom_rt","rom_lt"];
+  var KEY="osmotr_draft";
+
+  var $=function(i){return document.getElementById(i);};
+  function rad(n){var e=document.querySelector('input[name="'+n+'"]:checked');return e?e.value:"";}
+  function num(v){var x=parseFloat(String(v||"").replace(",","."));return isFinite(x)?x:null;}
+
+  /* ---------- хранилище: DeviceStorage -> localStorage -> адрес страницы ---------- */
+  var DS=(TG&&TG.DeviceStorage&&TG.DeviceStorage.setItem)?TG.DeviceStorage:null;
+  var box=(function(){
+    function ok(s){try{s.setItem("__p","1");s.removeItem("__p");return s;}catch(e){return null;}}
+    var b=null;try{b=ok(window.localStorage);}catch(e){}
+    if(!b){try{b=ok(window.sessionStorage);}catch(e){}}
+    return b;
+  })();
+  function b64e(str){try{return btoa(unescape(encodeURIComponent(str))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");}catch(e){return "";}}
+  function b64d(str){try{var t=str.replace(/-/g,"+").replace(/_/g,"/");while(t.length%4)t+="=";return decodeURIComponent(escape(atob(t)));}catch(e){return "";}}
+  var hashTimer=null;
+  function toHash(json){var e=b64e(json);if(!e)return;try{history.replaceState(null,"","#d="+e);}catch(x){}}
+  function fromHash(){var h=(location.hash||"").replace(/^#/,"");return h.indexOf("d=")===0?(b64d(h.slice(2))||null):null;}
+
+  function saveDraft(json){
+    if(DS){try{DS.setItem(KEY,json,function(){});}catch(e){}}
+    if(box){try{box.setItem(KEY,json);}catch(e){}}
+    if(hashTimer)clearTimeout(hashTimer);
+    hashTimer=setTimeout(function(){toHash(json);},400);
+  }
+  function loadDraft(cb){
+    var h=fromHash(); if(h)return cb(h);
+    var l=null; if(box){try{l=box.getItem(KEY);}catch(e){}}
+    if(DS){
+      try{DS.getItem(KEY,function(err,val){cb((!err&&val)?val:l);});return;}catch(e){}
+    }
+    cb(l);
+  }
+  function clearDraft(){
+    if(DS){try{DS.removeItem(KEY,function(){});}catch(e){}}
+    if(box){try{box.removeItem(KEY);}catch(e){}}
+    try{history.replaceState(null,"",location.pathname+location.search);}catch(e){}
+  }
+
+  /* ---------- автоподсчёт ---------- */
+  function touched(el){return el.getAttribute("data-touched")==="1";}
+  function setAuto(el,val){if(!touched(el))el.value=(val===null||val===undefined)?"":val;}
+  CALC.forEach(function(id){
+    var el=$(id);
+    el.addEventListener("input",function(){
+      if(el.value===""){el.removeAttribute("data-touched");el.classList.remove("edited");recalc();}
+      else{el.setAttribute("data-touched","1");el.classList.add("edited");}
+    });
+  });
+  function daysBetween(a,b){var x=new Date(a),y=new Date(b);return (isNaN(x)||isNaN(y))?null:Math.round((y-x)/86400000);}
+  function ageAt(dob,at){
+    var d=new Date(dob),a=new Date(at);if(isNaN(d)||isNaN(a))return null;
+    var g=a.getFullYear()-d.getFullYear(),m=a.getMonth()-d.getMonth();
+    if(m<0||(m===0&&a.getDate()<d.getDate()))g--;
+    return (g>=0&&g<130)?g:null;
+  }
+  function humanDays(d){
+    if(d===null||d<0)return "";
+    if(d<14)return d===1?"1 день":d+" дн.";
+    if(d<70)return "≈ "+Math.round(d/7)+" нед.";
+    return "≈ "+Math.round(d/30.4)+" мес.";
+  }
+  function nearPoint(d){
+    if(d===null||d<0)return "";
+    var P=[[7,"ранний п/о"],[42,"6 недель"],[91,"3 месяца"],[182,"6 месяцев"],[365,"12 месяцев"]];
+    var best=null,bd=1e9;
+    P.forEach(function(p){var x=Math.abs(d-p[0]);if(x<bd){bd=x;best=p[1];}});
+    return bd<=31?(" · ближайшая точка: "+best):"";
+  }
+  function recalc(){
+    setAuto($("days"),($("date").value&&$("opdate").value)?daysBetween($("opdate").value,$("date").value):null);
+    var sh=num($("days").value);
+    $("days_hint").textContent=(sh===null)?"":(humanDays(sh)+nearPoint(sh));
+    var at=$("opdate").value||$("date").value;
+    setAuto($("age"),($("dob").value&&at)?ageAt($("dob").value,at):null);
+    [["rom_r1","rom_r3","rom_rt"],["rom_l1","rom_l3","rom_lt"]].forEach(function(t){
+      var a=num($(t[0]).value),b=num($(t[1]).value);
+      setAuto($(t[2]),(a===null&&b===null)?null:Math.round(((a||0)+(b||0))*10)/10);
+    });
+    var r=num($("vol_r").value),l=num($("vol_l").value);
+    $("vol_d").textContent=(r!==null&&l!==null)?("разница "+Math.round(Math.abs(r-l)*10)/10):"разница —";
+  }
+  function sum(g){var t=0;document.querySelectorAll('input[data-g="'+g+'"]:checked').forEach(function(e){t+=Number(e.value);});return t;}
+  function score(){
+    var p=sum("pain"),f=sum("fn"),a=sum("al"),all=p+f+a;
+    $("t_pain").textContent=p;$("t_fn").textContent=f;$("t_al").textContent=a;$("t_all").textContent=all;
+    $("live").textContent=all;
+    return {pain:p,fn:f,alignment:a,total:all};
+  }
+
+  /* ---------- сбор и восстановление ---------- */
+  function collect(){
+    var d={};
+    ID.forEach(function(k){d[k]=$(k).value;});
+    RAD.forEach(function(k){d[k]=rad(k);});
+    d.__touched=CALC.filter(function(x){return touched($(x));}).join(",");
+    return d;
+  }
+  function compact(d){
+    var o={};
+    for(var k in d){if(d[k]!=="" && d[k]!==undefined && k!=="__touched")o[k]=d[k];}
+    return o;
+  }
+  function applyData(d){
+    var filled=false;
+    ID.forEach(function(k){if(d[k]){$(k).value=d[k];if(k!=="date")filled=true;}});
+    RAD.forEach(function(k){
+      if(!d[k])return;
+      var e=document.querySelector('input[name="'+k+'"][value="'+d[k]+'"]');
+      if(e){e.checked=true;filled=true;}
+    });
+    (d.__touched||"").split(",").filter(Boolean).forEach(function(id){
+      var el=$(id);if(el){el.setAttribute("data-touched","1");el.classList.add("edited");}
+    });
+    return filled;
+  }
+  function draft(){
+    var json=JSON.stringify(collect());
+    saveDraft(json);
+    var n=new Date(),p=function(x){return(x<10?"0":"")+x;};
+    $("saved").textContent="черновик сохранён "+p(n.getHours())+":"+p(n.getMinutes());
+  }
+
+  /* ---------- коды ---------- */
+  function codes(){try{return JSON.parse((box&&box.getItem("osmotr_codes"))||"[]");}catch(e){return [];}}
+  function fillCodes(){
+    var dl=$("codes");dl.innerHTML="";
+    codes().slice(-40).reverse().forEach(function(c){var o=document.createElement("option");o.value=c;dl.appendChild(o);});
+  }
+  function rememberCode(c){
+    if(!c||!box)return;
+    var l=codes();if(l.indexOf(c)===-1){l.push(c);try{box.setItem("osmotr_codes",JSON.stringify(l));}catch(e){}fillCodes();}
+  }
+  $("newcode").addEventListener("click",function(){
+    var y=new Date().getFullYear(),best=0;
+    codes().forEach(function(c){var m=/^MA-(\d{4})-(\d+)$/.exec(c);if(m&&Number(m[1])===y)best=Math.max(best,Number(m[2]));});
+    var n=String(best+1);while(n.length<3)n="0"+n;
+    $("code").value="MA-"+y+"-"+n;draft();
+  });
+
+  function clean(s){return (s||"").replace(/[\/\\:*?"<>|]/g,"").replace(/\s+/g," ").trim();}
+  function filename(){
+    var n=[clean($("code").value),clean($("fio").value)].filter(Boolean).join(" - ");
+    return (n||("Осмотр "+($("date").value||"без даты")))+".json";
+  }
+  function plain(d,s){
+    var out=["ОСМОТР ЛОДЫЖКИ v6"];
+    for(var k in LBL)if(d[k])out.push(LBL[k]+": "+d[k]);
+    out.push("AOFAS: боль "+s.pain+" + функция "+s.fn+" + ось "+s.alignment+" = "+s.total+"/100");
+    return out.join("\n");
+  }
+
+  /* ---------- отправка ---------- */
+  var lastPack=null;
+  function pack(){
+    var d=collect(),s=score();
+    return {fn:filename(),
+      payload:{f:"osmotr-lodyzhki",v:6,t:new Date().toISOString(),n:filename(),d:compact(d),a:s},
+      text:plain(d,s)};
+  }
+  function finish(){
+    var p=pack();lastPack=p;
+    rememberCode(clean($("code").value));
+    $("fname").textContent=p.fn;
+    $("dump").value=p.text;
+    $("after").hidden=false;
+    $("after").scrollIntoView({behavior:"smooth",block:"start"});
+    if(inTG&&TG.sendData){
+      var s=JSON.stringify(p.payload);
+      if(s.length<=4000){
+        try{TG.sendData(s);return;}catch(e){}
+      }else{
+        $("sendmsg").textContent="Осмотр слишком большой для отправки одним сообщением — сохраните файлом.";
+      }
+    }
+    offerFile(p);
+  }
+  function offerFile(p){
+    var json=JSON.stringify(p.payload,null,2);
+    try{
+      var f=new File([json],p.fn,{type:"application/json"});
+      if(navigator.canShare&&navigator.canShare({files:[f]})&&navigator.share){
+        navigator.share({files:[f],title:p.fn}).catch(function(){});
+        return;
+      }
+    }catch(e){}
+    try{
+      var b=new Blob([json],{type:"application/json"}),u=URL.createObjectURL(b),a=document.createElement("a");
+      a.href=u;a.download=p.fn;a.style.display="none";document.body.appendChild(a);a.click();
+      setTimeout(function(){URL.revokeObjectURL(u);a.remove();},1500);
+    }catch(e){}
+  }
+
+  $("save").addEventListener("click",finish);
+  $("share2").addEventListener("click",function(){if(lastPack)offerFile(lastPack);});
+
+  $("copy").addEventListener("click",function(){
+    var ta=$("dump"),b=this,ok=false;
+    ta.removeAttribute("readonly");ta.focus();ta.setSelectionRange(0,ta.value.length);
+    try{ok=document.execCommand("copy");}catch(e){}
+    ta.setAttribute("readonly","");
+    if(!ok&&navigator.clipboard){
+      navigator.clipboard.writeText(ta.value).then(function(){b.textContent="Скопировано";})
+        .catch(function(){b.textContent="Выделите текст и скопируйте вручную";});
+      return;
+    }
+    b.textContent=ok?"Скопировано":"Выделите текст и скопируйте вручную";
+  });
+
+  $("loadfile").addEventListener("change",function(){
+    var f=this.files&&this.files[0];if(!f)return;
+    var fr=new FileReader();
+    fr.onload=function(){
+      var o;try{o=JSON.parse(String(fr.result));}catch(e){$("loadmsg").textContent="Файл не читается — нужен .json от этой же формы";return;}
+      var d=o&&(o.d||o.data)?(o.d||o.data):o;
+      if(!d||typeof d!=="object"){$("loadmsg").textContent="В файле нет данных осмотра";return;}
+      applyData(d);recalc();score();draft();
+      $("loadmsg").textContent="Осмотр загружен, можно продолжать";
+      $("restored").hidden=true;
+    };
+    fr.onerror=function(){$("loadmsg").textContent="Не удалось прочитать файл";};
+    fr.readAsText(f);
+  });
+
+  $("fresh").addEventListener("click",function(){
+    if(!confirm("Стереть заполненное и начать новый осмотр?"))return;
+    clearDraft();location.reload();
+  });
+
+  /* ---------- события ---------- */
+  document.addEventListener("input",function(){recalc();draft();});
+  document.addEventListener("change",function(){recalc();score();draft();});
+  window.addEventListener("pagehide",draft);
+  document.addEventListener("visibilitychange",function(){if(document.visibilityState==="hidden")draft();});
+
+  /* ---------- Telegram ---------- */
+  if(inTG){
+    try{TG.ready();TG.expand();}catch(e){}
+    try{if(TG.disableVerticalSwipes)TG.disableVerticalSwipes();}catch(e){}
+    try{
+      if(TG.MainButton){
+        TG.MainButton.setText("Отправить врачу");
+        TG.MainButton.show();
+        TG.MainButton.onClick(finish);
+        document.querySelector(".savebar").style.display="none";
+        document.body.style.paddingBottom="20px";
+      }
+    }catch(e){}
+    $("tgnote").hidden=false;
+  }
+
+  if(!$("date").value){
+    var n=new Date(),p=function(x){return(x<10?"0":"")+x;};
+    $("date").value=n.getFullYear()+"-"+p(n.getMonth()+1)+"-"+p(n.getDate());
+  }
+  fillCodes();
+  loadDraft(function(raw){
+    if(raw){
+      var d=null;try{d=JSON.parse(raw);}catch(e){}
+      if(d&&(d.d||d.data))d=d.d||d.data;
+      if(d&&applyData(d))$("restored").hidden=false;
+    }
+    recalc();score();
+    $("nojs").hidden=true;
+  });
+})();
+</script>
+
+</body>
+</html>
