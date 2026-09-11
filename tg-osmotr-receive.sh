@@ -16,6 +16,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+FORM_URL="${OSMOTR_URL:-https://tarabaska.github.io/meddata-osmotr/}"
 TOKEN_FILE="$HOME/.burtsev-tg-token"
 OFFSET_FILE="$HOME/.osmotr-tg-offset"
 OUT_DIR="${OSMOTR_DIR:-$HOME/MedData/osmotry}"
@@ -29,7 +30,7 @@ pull() {
   local offset resp
   offset=$(cat "$OFFSET_FILE" 2>/dev/null || echo 0)
   resp=$(curl -sS --max-time 40 "${API}/getUpdates?offset=${offset}&timeout=0&allowed_updates=%5B%22message%22%5D") || return 0
-  OUT_DIR="$OUT_DIR" OFFSET_FILE="$OFFSET_FILE" API="$API" HERE="$SCRIPT_DIR" \
+  OUT_DIR="$OUT_DIR" OFFSET_FILE="$OFFSET_FILE" API="$API" HERE="$SCRIPT_DIR" FORM_URL="$FORM_URL" \
     python3 - "$resp" <<'PYEOF'
 import json, os, re, sys, datetime, subprocess
 
@@ -50,11 +51,44 @@ def safe(name):
     return re.sub(r"\s+", " ", name) or "osmotr"
 
 
+form_url = os.environ.get("FORM_URL", "")
+
+
+def give_button(chat, who):
+    """Выдать собеседнику кнопку, открывающую форму. Кнопка остаётся у него навсегда."""
+    kb = json.dumps({
+        "keyboard": [[{"text": "Открыть осмотр", "web_app": {"url": form_url}}]],
+        "resize_keyboard": True,
+        "is_persistent": True,
+    }, ensure_ascii=False)
+    text = ("Форма осмотра готова.\n\n"
+            "Кнопка «Открыть осмотр» внизу экрана — она останется здесь навсегда. "
+            "Нажмите её на приёме, заполните и нажмите «Отправить врачу». "
+            "В ответ придут два файла: PDF для истории и файл для программы.")
+    r = subprocess.run([
+        "curl", "-sS", "--max-time", "30", "-X", "POST", api + "/sendMessage",
+        "-F", "chat_id=" + str(chat),
+        "-F", "text=" + text,
+        "-F", "reply_markup=" + kb,
+    ], capture_output=True, text=True)
+    try:
+        ok = json.loads(r.stdout).get("ok", False)
+    except Exception:
+        ok = False
+    print(("кнопка выдана: " + who) if ok else ("кнопку выдать не удалось: " + who))
+
+
 for upd in resp.get("result", []):
     last = upd["update_id"] + 1
     msg = upd.get("message") or {}
     wad = msg.get("web_app_data")
     if not wad:
+        text = (msg.get("text") or "").strip()
+        chat = (msg.get("chat") or {}).get("id")
+        if chat and form_url and (text.startswith("/start") or text.lower() in ("форма", "осмотр", "начать")):
+            frm = msg.get("from") or {}
+            who = " ".join(x for x in [frm.get("first_name"), frm.get("last_name")] if x) or str(chat)
+            give_button(chat, who)
         continue
     try:
         payload = json.loads(wad.get("data", ""))
